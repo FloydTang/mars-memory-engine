@@ -1,0 +1,103 @@
+{
+  "name": "Mars_Mirror_Sync",
+  "description": "监控系统文件变动，确保备份仓库与当前生产环境同步",
+  "version": "1.0.0",
+  "author": "Mars",
+  "namespace": "banjinjiuliang",
+  
+  "capabilities": [
+    "file_monitoring",
+    "version_control",
+    "automated_backup",
+    "change_detection"
+  ],
+  
+  "config": {
+    "workspace_path": "/root/.openclaw/agents/main/workspace",
+    "backup_repository": "https://github.com/FloydTang/openclaw-config",
+    "branch": "main",
+    "excluded_patterns": [
+      "node_modules/",
+      "__pycache__/",
+      "*.log",
+      "*.sqlite",
+      "*.pyc",
+      ".env",
+      "*.key",
+      "*.pem",
+      "media/",
+      "tmp/",
+      ".cache/",
+      "~/.openclaw/memory/lancedb/"
+    ],
+    "schedule": {
+      "cron": "0 0 * * *",
+      "timezone": "America/Los_Angeles",
+      "description": "每天凌晨 00:00 执行自动备份"
+    }
+  },
+  
+  "commands": {
+    "sync_now": {
+      "description": "立即执行手动同步",
+      "script": "memory_engine/skills/sync_to_github.sh",
+      "timeout": 300
+    },
+    "check_status": {
+      "description": "检查同步状态",
+      "command": "cd /root/.openclaw/agents/main/workspace && git status --short && echo '---' && git log --oneline -3"
+    },
+    "view_history": {
+      "description": "查看同步历史",
+      "command": "cat /root/.openclaw/agents/main/workspace/logs/sync_history.log 2>/dev/null || echo '暂无同步记录'"
+    }
+  },
+  
+  "monitoring": {
+    "tracked_paths": [
+      "memory/",
+      "memory/topics/",
+      "memory_engine/",
+      "SOUL.md",
+      "IDENTITY.md",
+      "USER.md",
+      "AGENTS.md",
+      "MEMORY.md"
+    ],
+    "priority_files": [
+      "SOUL.md",
+      "IDENTITY.md",
+      "MEMORY.md",
+      "memory/topics/*.md"
+    ],
+    "auto_commit_message_template": "Daily Mars Heartbeat - {{date}}\n\n自动备份时间: {{timestamp}}\n触发源: {{trigger}}\n变更文件: {{files}}"
+  },
+  
+  "notifications": {
+    "on_success": {
+      "enabled": true,
+      "message": "✅ Mars Mirror Sync 完成 - {{timestamp}}",
+      "channel": "discord"
+    },
+    "on_failure": {
+      "enabled": true,
+      "message": "❌ Mars Mirror Sync 失败 - {{timestamp}}\n错误: {{error}}",
+      "channel": "discord",
+      "priority": "high"
+    }
+  },
+  
+  "recovery": {
+    "auto_retry": true,
+    "max_retries": 3,
+    "retry_delay_seconds": 60,
+    "fallback_action": "notify_admin"
+  },
+  
+  "metadata": {
+    "created_at": "2026-03-12",
+    "purpose": "确保 Mars 工作环境的持久化和可恢复性",
+    "importance": "critical",
+    "dependencies": ["git", "cron"]
+  }
+}

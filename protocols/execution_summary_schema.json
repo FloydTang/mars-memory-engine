@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Execution Summary Schema",
+  "description": "子代理任务执行摘要标准格式 - 用于向长期记忆库汇报",
+  "type": "object",
+  "required": ["agent_id", "task_id", "timestamp", "summary", "insights"],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "description": "子代理标识符",
+      "enum": ["vector", "cypher", "echo", "forge", "main"]
+    },
+    "task_id": {
+      "type": "string",
+      "description": "任务唯一标识"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 格式时间戳"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["task_type", "status", "duration_minutes"],
+      "properties": {
+        "task_type": {
+          "type": "string",
+          "description": "任务类型",
+          "examples": ["content_creation", "data_analysis", "code_development", "rss_collection"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "failed", "partial", "cancelled"]
+        },
+        "duration_minutes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "output_files": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "生成的文件路径列表"
+        }
+      }
+    },
+    "insights": {
+      "type": "array",
+      "description": "任务中产生的关键知识和业务结论",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["type", "content", "confidence"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["fact", "pattern", "preference", "failure", "optimization"],
+            "description": "洞察类型"
+          },
+          "content": {
+            "type": "string",
+            "description": "核心知识内容",
+            "minLength": 10,
+            "maxLength": 2000
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "置信度 0-1"
+          },
+          "context": {
+            "type": "string",
+            "description": "产生该洞察的具体场景"
+          },
+          "related_topics": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "相关主题标签"
+          },
+          "data_type": {
+            "type": "string",
+            "enum": ["tech", "business_logic", "user_preference", "troubleshooting", "policy"],
+            "description": "数据分类，用于存储路由"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date",
+            "description": "过期日期（政策类必须设置）"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "任务量化指标",
+      "properties": {
+        "items_processed": {"type": "integer"},
+        "success_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "cost_usd": {"type": "number", "minimum": 0},
+        "api_calls": {"type": "integer"}
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "string"},
+          "message": {"type": "string"},
+          "resolution": {"type": "string"}
+        }
+      }
+    }
+  }
+}

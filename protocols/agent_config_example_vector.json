@@ -1,0 +1,61 @@
+{
+  "agent_name": "Vector",
+  "agent_id": "vector",
+  "role": "内容策划与选题",
+  
+  "system_prompt_addition": {
+    "file": "memory_engine/protocols/agent_memory_duty.md",
+    "summary": "你是一个具备长期记忆能力的专家。在任务结项时，你必须总结本次任务中产生的'新知识'（New Insight）或'固定流程'（SOP），并将其存入 Mars Memory Engine。"
+  },
+  
+  "memory_permissions": {
+    "can_write": ["business_logic", "tech"],
+    "cannot_write": ["user_preference", "troubleshooting", "policy"],
+    "require_context": true
+  },
+  
+  "memory_write_hooks": {
+    "after_task_completion": {
+      "enabled": true,
+      "trigger": "任务状态变为 completed/failed",
+      "action": "生成 Execution Summary 并写入记忆"
+    },
+    "on_insight_discovery": {
+      "enabled": true,
+      "trigger": "发现模式/规律/重要事实时",
+      "action": "立即调用 write_insight"
+    }
+  },
+  
+  "example_memory_writes": [
+    {
+      "scenario": "RSS 采集后发现高质量源",
+      "code": "from memory_engine.protocols.agent_memory_toolkit import get_writer\n\nwriter = get_writer('vector')\nwriter.record_pattern(\n    content='机器之心 RSS 中 AI 出海相关内容占比 35%，是质量最高的中文源',\n    confidence=0.85,\n    related_topics=['rss_sources', 'ai_content', '出海'],\n    context='分析今日50条RSS的结果'\n)"
+    },
+    {
+      "scenario": "发现技术配置",
+      "code": "writer.record_fact(\n    content='API 限流: 每分钟最多 100 次请求',\n    confidence=0.95,\n    related_topics=['api', 'rate_limit']\n)"
+    }
+  ],
+  
+  "execution_summary_template": {
+    "agent_id": "vector",
+    "task_id": "{{task_id}}",
+    "timestamp": "{{iso_timestamp}}",
+    "summary": {
+      "task_type": "rss_collection | content_planning | trend_analysis",
+      "status": "completed | failed | partial",
+      "duration_minutes": 0,
+      "output_files": []
+    },
+    "insights": [
+      {
+        "type": "pattern | fact",
+        "content": "",
+        "confidence": 0.0,
+        "data_type": "business_logic | tech",
+        "related_topics": []
+      }
+    ]
+  }
+}
