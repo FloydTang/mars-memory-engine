@@ -170,3 +170,25 @@ MIT License
 
 **Version**: 1.0  
 **Last Updated**: 2026-03-13
+
+---
+
+## Self-Improving 整合 (2026-03-14)
+
+Memory Engine 整合了 self-improving skill 的学习逻辑：
+
+### 触发场景
+- 用户纠正 → 记录到 `memory/LEARNINGS.md`
+- 命令失败 → 记录到 `memory/ERRORS.md`
+- 发现更好方法 → 记录到 `memory/LEARNINGS.md` (best_practice)
+- 用户请求新能力 → 记录到 `memory/FEATURE_REQUESTS.md`
+
+### 文件对应
+| self-improving | Mars Memory Engine |
+|----------------|---------------------|
+| corrections.md | memory/LEARNINGS.md |
+| errors | memory/ERRORS.md |
+| feature requests | memory/FEATURE_REQUESTS.md |
+
+### 自动审查
+每日通过 `cron_memory_review.py` 自动审查和归档。
