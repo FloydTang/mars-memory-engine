@@ -49,8 +49,9 @@ class KnowledgeDistiller:
         self.skills_output_dir = self.workspace / "memory_engine" / "skills"
         self.skills_output_dir.mkdir(parents=True, exist_ok=True)
         
-        # 蒸馏阈值
+        # 蒸馏阈值 (v3: 双重门槛)
         self.threshold_bytes = 10 * 1024  # 10KB
+        self.threshold_entries = 20       # 最少 20 条
     
     def scan_and_distill(self) -> List[str]:
         """
@@ -71,7 +72,14 @@ class KnowledgeDistiller:
             file_size = topic_file.stat().st_size
             
             if file_size < self.threshold_bytes:
-                print(f"   ⏭️  {topic_file.name} ({file_size} bytes) - 未达到阈值")
+                print(f"   ⏭️  {topic_file.name} ({file_size} bytes) - 未达到字节阈值")
+                continue
+
+            # v3: 双重门槛 — 还需检查条目数
+            content_preview = topic_file.read_text(encoding='utf-8')
+            entry_count = len(re.findall(r'###\s*\[\d{4}-\d{2}-\d{2}\]', content_preview))
+            if entry_count < self.threshold_entries:
+                print(f"   ⏭️  {topic_file.name} ({entry_count} 条) - 未达到条目阈值")
                 continue
             
             print(f"\n🎯 处理: {topic_file.name} ({file_size} bytes)")
@@ -355,6 +363,7 @@ class KnowledgeDistiller:
         skill_config = {
             "name": f"distilled_{topic}",
             "version": "1.0.0",
+            "status": "active" if knowledge.confidence_score >= 0.7 else "draft",
             "description": f"基于 {knowledge.topic} 知识蒸馏生成的专业 Skill",
             "distilled_from": f"memory/topics/{topic}.md",
             "distilled_at": datetime.now().isoformat(),
