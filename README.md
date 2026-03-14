@@ -192,3 +192,28 @@ Memory Engine 整合了 self-improving skill 的学习逻辑：
 
 ### 自动审查
 每日通过 `cron_memory_review.py` 自动审查和归档。
+
+---
+
+## 晋升机制 v2.0 (2026-03-14)
+
+### 自动判断规则
+
+当用户说"记到相关的空间"时，自动判断内容类型：
+
+| 内容类型 | 关键词 | 目标文档 |
+|----------|--------|----------|
+| 频道管理 | 子代理、频道、@、Discord | memory/topics/discord_management.md |
+| 行为规范 | 原则、铁律、永远、不要 | SOUL.md |
+| 工作流程 | 调用、spawn、工作流、代理 | AGENTS.md |
+| 工具配置 | API、配置、工具、环境变量 | TOOLS.md |
+| 系统配置 | 系统、Gateway、OpenClaw | memory/topics/system_config.md |
+| GitHub | 仓库、开源、GitHub | memory/topics/github_automation.md |
+
+### 沟通指令
+
+| 指令 | 动作 |
+|------|------|
+| "记到相关的空间" | 自动判断 + 晋升 + GitHub同步 |
+| "记到 SOUL" | 晋升到 SOUL.md |
+| "记到 discord" | 晋升到 discord_management.md |
