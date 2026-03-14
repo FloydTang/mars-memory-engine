@@ -253,6 +253,31 @@ memory/
 - "记到 AGENTS" → 晋升到 AGENTS.md  
 - "记到 TOOLS" → 晋升到 TOOLS.md
 - "记到 discord" → 晋升到 memory/topics/discord_management.md
+- "记到 system" → 晋升到 memory/topics/system_config.md
+
+---
+
+## 自我提升承诺（Mars 必须遵守）
+
+### 立即执行规则
+
+当用户说"记到 XXX"时，**立即执行**：
+1. 记录到 LEARNINGS.md
+2. 晋升到目标文档
+3. 同步到 GitHub
+
+### 问题重复处理
+
+当用户说"这个问题怎么又犯了"：
+1. 立即记录，标记 critical
+2. 检查是否已晋升过
+3. 如果重复3次，自动晋升为铁律
+
+### 每次晋升后
+
+**必须**自动同步到：
+- `openclaw-config` 仓库
+- `mars-memory-engine` 开源仓库
 
 ---
 
