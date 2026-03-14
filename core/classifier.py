@@ -10,6 +10,7 @@ import re
 from typing import Optional, Tuple
 
 from core.lancedb_store import MemoryCategory
+from config.models import MODEL_CLASSIFY
 
 # ─── 规则层 ───────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ def classify_by_llm(
 
     key = api_key or os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY", "")
     url = base_url or os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_BASE_URL", "")
-    mdl = model or os.getenv("LLM_MODEL") or "kimi-k2.5"
+    mdl = model or os.getenv("LLM_MODEL") or MODEL_CLASSIFY
 
     if not key:
         return MemoryCategory.PATTERN.value, 0.5

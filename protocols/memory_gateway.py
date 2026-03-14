@@ -14,6 +14,8 @@ from datetime import datetime
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
+from config.models import MODEL_CLASSIFY
+
 from core.lancedb_store import (
     LanceDBMemoryStore,
     EmbeddingProvider,
@@ -357,7 +359,7 @@ class MemoryGateway:
 
         key = self.llm_api_key or os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY", "")
         url = self.llm_base_url or os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_BASE_URL", "")
-        mdl = self.llm_model or os.getenv("LLM_MODEL") or "kimi-k2.5"
+        mdl = self.llm_model or os.getenv("LLM_MODEL") or MODEL_CLASSIFY
 
         if not key:
             return "coexist", []
