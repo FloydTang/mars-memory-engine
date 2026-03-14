@@ -254,6 +254,48 @@ memory/
 - "记到 TOOLS" → 晋升到 TOOLS.md
 - "记到 discord" → 晋升到 memory/topics/discord_management.md
 - "记到 system" → 晋升到 memory/topics/system_config.md
+- **"记到相关的空间"** → 自动判断目标文档并晋升
+
+---
+
+## "记到相关的空间" 自动判断规则
+
+当用户说"记到相关的空间"时，Mars 自动判断内容类型并晋升：
+
+| 内容类型 | 关键词 | 目标文档 |
+|----------|--------|----------|
+| **频道管理** | 子代理、频道、@、Discord | `memory/topics/discord_management.md` |
+| **行为规范** | 原则、铁律、永远、不要 | `SOUL.md` |
+| **工作流程** | 调用、spawn、工作流、代理 | `AGENTS.md` |
+| **工具配置** | API、配置、工具、环境变量 | `TOOLS.md` |
+| **系统配置** | 系统、Gateway、OpenClaw | `memory/topics/system_config.md` |
+| **GitHub** | 仓库、开源、GitHub | `memory/topics/github_automation.md` |
+
+### 执行流程
+
+```
+用户说"记到相关的空间"
+       │
+       ▼
+1. 判断内容类型（根据关键词）
+       │
+       ▼
+2. 记录到 LEARNINGS.md
+       │
+       ▼
+3. 晋升到目标文档
+       │
+       ▼
+4. 同步到 GitHub（openclaw-config + mars-memory-engine）
+```
+
+### 判断示例
+
+| 用户输入 | 判断结果 | 目标文档 |
+|----------|----------|----------|
+| "子代理要用 spawn 调用" | 频道管理 + 工作流程 | discord_management.md |
+| "不要在频道 @ 我" | 行为规范 | SOUL.md |
+| "API Key 要配置到环境变量" | 工具配置 | TOOLS.md |
 
 ---
 
