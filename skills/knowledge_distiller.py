@@ -26,6 +26,8 @@ import argparse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from config.models import MODEL_DISTILL
+
 
 @dataclass
 class DistilledKnowledge:
@@ -391,7 +393,7 @@ class KnowledgeDistiller:
             ],
             
             "subagent_config": {
-                "model": "kimi-coding/k2p5",
+                "model": MODEL_DISTILL,
                 "thinking": "medium",
                 "context_files": [
                     f"memory/topics/{topic}.md",
