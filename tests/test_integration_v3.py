@@ -650,7 +650,7 @@ def test_gateway_write_pipeline():
 
             return True
 
-        result = asyncio.get_event_loop().run_until_complete(run())
+        result = asyncio.run(run())
         assert result
 
         print("✅ test_gateway_write_pipeline PASSED")
@@ -706,11 +706,79 @@ def test_gateway_search_pipeline():
             for item in r2:
                 assert item["guild_id"] == "g1", f"隔离失败: 返回了 guild={item['guild_id']} 的记忆"
 
+            stored = store.memories_table.search().where("topic = 'discord'").limit(1).to_pandas()
+            assert stored.iloc[0]["access_count"] >= 1, "命中检索后应更新 access_count"
+
             return True
 
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
         print("✅ test_gateway_search_pipeline PASSED")
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def test_openclaw_adapter_markdown_first():
+    """测试 OpenClaw adapter: Markdown 写入、重建索引、可追溯检索、晋升"""
+    from core.lancedb_store import LanceDBMemoryStore
+    from openclaw.adapter import (
+        MarkdownMemoryEntry,
+        OpenClawMemoryAdapter,
+        WorkspaceContext,
+    )
+    from protocols.memory_gateway import MemoryGateway
+
+    tmpdir = tempfile.mkdtemp(prefix="mars_test_adapter_")
+    try:
+        workspace = Path(tmpdir)
+        fake = FakeEmbeddingProvider()
+        gateway = MemoryGateway(
+            store=LanceDBMemoryStore(db_path=str(workspace / ".mars-memory-engine" / "lancedb")),
+            embedder=fake,
+            use_llm_classify=False,
+            use_llm_conflict=False,
+        )
+        adapter = OpenClawMemoryAdapter(
+            str(workspace),
+            gateway=gateway,
+            db_path=str(workspace / ".mars-memory-engine" / "lancedb"),
+            embedder=fake,
+        )
+        ctx = WorkspaceContext(
+            workspace_path=str(workspace),
+            agent_id="agent_main",
+            guild_id="guild_alpha",
+            session_scope="shared",
+        )
+
+        result = adapter.ingest_markdown_memory(
+            MarkdownMemoryEntry(
+                title="Webhook 配置",
+                content="Discord 的 webhook URL 配置在 openclaw.json 里",
+                topic="discord",
+                category="pattern",
+            ),
+            ctx,
+        )
+        assert result["id"], "adapter 写入应返回 memory id"
+
+        topic_file = workspace / "memory" / "topics" / "discord.md"
+        assert topic_file.exists(), "topic Markdown 应落盘"
+
+        adapter.rebuild_index(str(workspace))
+        search_results = adapter.search_memory("Discord webhook 配置", ctx)
+        assert search_results, "重建索引后应能检索"
+        top = search_results[0]
+        assert top["source_file"].endswith("discord.md"), f"source_file 应可追溯: {top}"
+        assert top["memory_ref"]["source_section"] == "Webhook 配置"
+        assert top["summary_l1"], "应返回 L1 摘要"
+
+        promoted = adapter.promote_memory(top["memory_ref"], "AGENTS.md")
+        assert promoted.exists(), "晋升目标文档应存在"
+        promoted_text = promoted.read_text(encoding="utf-8")
+        assert "Promoted from" in promoted_text, "晋升文档应保留来源"
+
+        print("✅ test_openclaw_adapter_markdown_first PASSED")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -730,6 +798,7 @@ ALL_TESTS = [
     test_knowledge_distiller,
     test_gateway_write_pipeline,
     test_gateway_search_pipeline,
+    test_openclaw_adapter_markdown_first,
 ]
 
 

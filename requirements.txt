@@ -5,6 +5,8 @@ requests>=2.31.0
 python-dateutil>=2.8.0
 sentence-transformers>=2.2.0   # 本地 Embedding (BAAI/bge-m3)
 torch>=2.0.0                   # sentence-transformers 依赖
+openai>=1.0.0                  # LLM 分类 / API embedding fallback
+pytest>=8.0.0                  # 测试运行器
+pandas>=2.2.0                  # LanceDB to_pandas / integration tests
 # 可选
-# scikit-learn>=1.3.0  # 用于 K-means 聚类
-# openai>=1.0.0        # 用于 Jina/OpenAI API Embedding (回退方案)
+# scikit-learn>=1.3.0          # 用于 K-means 聚类

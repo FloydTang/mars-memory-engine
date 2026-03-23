@@ -17,6 +17,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import time
 import threading
 
@@ -64,6 +65,10 @@ class MemoryEntry:
     # 来源
     source: str = ""
     source_id: str = ""
+    source_file: str = ""
+    source_section: str = ""
+    source_type: str = ""
+    entry_hash: str = ""
 
     # 多代理隔离
     scope: str = "private"
@@ -124,6 +129,10 @@ class LanceDBMemoryStore:
                 ("related_topics", pa.list_(pa.string())),
                 ("source", pa.string()),
                 ("source_id", pa.string()),
+                ("source_file", pa.string()),
+                ("source_section", pa.string()),
+                ("source_type", pa.string()),
+                ("entry_hash", pa.string()),
                 ("scope", pa.string()),
                 ("agent_id", pa.string()),
                 ("guild_id", pa.string()),
@@ -198,6 +207,10 @@ class LanceDBMemoryStore:
             "related_topics": entry.related_topics,
             "source": entry.source,
             "source_id": entry.source_id,
+            "source_file": entry.source_file,
+            "source_section": entry.source_section,
+            "source_type": entry.source_type,
+            "entry_hash": entry.entry_hash,
             "scope": entry.scope,
             "agent_id": entry.agent_id,
             "guild_id": entry.guild_id,
@@ -284,7 +297,9 @@ class LanceDBMemoryStore:
         # 7. Hardmin 截断 (Step 5)
         combined = combined[combined['final_score'] >= 0.05]
 
-        return combined.head(limit).to_dict('records')
+        results = combined.head(limit).to_dict('records')
+        self.record_access(results, query)
+        return results
 
     def _rrf_fusion(self, vector_df, text_df, vector_weight, bm25_weight, k=60):
         """RRF 融合算法"""
@@ -443,6 +458,31 @@ class LanceDBMemoryStore:
         except Exception:
             pass
 
+    def record_access(self, results: List[Dict], query: str):
+        """记录检索命中并更新访问统计"""
+        now = datetime.now()
+        for row in results:
+            memory_id = row.get("id")
+            if not memory_id:
+                continue
+
+            new_access_count = int(row.get("access_count", 0)) + 1
+            self.update_memory_fields(memory_id, {
+                "last_accessed": now,
+                "updated_at": now,
+                "access_count": new_access_count,
+            })
+
+            try:
+                self.access_log_table.add([{
+                    "memory_id": memory_id,
+                    "accessed_at": now,
+                    "query": query,
+                    "relevance_score": float(row.get("final_score", row.get("rrf_score", 0.0))),
+                }])
+            except Exception:
+                continue
+
 
 # ── Embedding 接口 (Step 4: LRU 缓存) ──
 
@@ -578,6 +618,51 @@ def generate_memory_layers(content: str, category: str, topic: str) -> Tuple[str
     l1 = f"[{category}|{topic}] {overview}"
 
     return l0, l1, l2
+
+
+def slugify_section(value: str) -> str:
+    """把标题或主题压平成稳定 slug，用于 Markdown 记忆定位。"""
+    text = re.sub(r"\s+", "-", value.strip().lower())
+    text = re.sub(r"[^a-z0-9\u4e00-\u9fff\-_]+", "-", text)
+    text = re.sub(r"-{2,}", "-", text).strip("-")
+    return text or "memory"
+
+
+def derive_fact_key(
+    category: str,
+    topic: str,
+    content: str,
+    source_section: str = "",
+    metadata: Optional[Dict] = None,
+) -> Optional[str]:
+    """
+    生成较稳定的事实键。
+
+    优先级:
+    1. metadata 中显式指定的 stable_fact_key / entity_name / preference_key
+    2. source_section slug
+    3. topic + 内容前缀
+    """
+    meta = metadata or {}
+    explicit = (
+        meta.get("stable_fact_key")
+        or meta.get("entity_name")
+        or meta.get("preference_key")
+    )
+    if explicit:
+        return f"{category}:{slugify_section(str(explicit))}"
+
+    if source_section:
+        return f"{category}:{slugify_section(source_section)}"
+
+    normalized = content.strip()
+    if len(normalized) < 12:
+        return None
+
+    prefix = slugify_section(normalized[:48])
+    if not prefix or prefix == "memory":
+        return None
+    return f"{category}:{slugify_section(topic)}:{prefix}"
 
 
 # ── 全局实例 ──

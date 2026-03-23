@@ -25,6 +25,7 @@ from core.lancedb_store import (
     get_memory_store,
     get_embedder,
     generate_memory_layers,
+    derive_fact_key,
 )
 from core.classifier import classify
 from core.noise_filter import filter_noise
@@ -85,8 +86,12 @@ class MemoryGateway:
         importance: float = 0.5,
         source: str = "",
         source_id: str = "",
+        source_file: str = "",
+        source_section: str = "",
+        source_type: str = "",
         related_topics: Optional[List[str]] = None,
         metadata: Optional[Dict] = None,
+        fact_key_override: Optional[str] = None,
     ) -> Dict:
         """
         写入一条记忆
@@ -168,7 +173,13 @@ class MemoryGateway:
             fact_key_val = None
             if behavior["allow_supersede"] and conflict_info["action"] == "replace":
                 # preference/entity: 用 supersede 替代 archive
-                fact_key_val = f"{category}:{topic}"
+                fact_key_val = fact_key_override or derive_fact_key(
+                    category=category,
+                    topic=topic,
+                    content=content,
+                    source_section=source_section,
+                    metadata=metadata,
+                )
                 for old_id in conflict_info["replace_ids"]:
                     self.store.update_memory_fields(old_id, {
                         "invalidated_at": now.isoformat(),
@@ -196,6 +207,10 @@ class MemoryGateway:
                 related_topics=related_topics or [],
                 source=source,
                 source_id=source_id,
+                source_file=source_file,
+                source_section=source_section,
+                source_type=source_type,
+                entry_hash=content_hash,
                 scope=scope,
                 agent_id=agent_id,
                 guild_id=guild_id,
@@ -257,6 +272,9 @@ class MemoryGateway:
                 r["_conflict_note"] = (
                     f"此记忆与其他记忆存在冲突，写入者: {r.get('agent_id', 'unknown')}"
                 )
+            r["summary_l1"] = r.get("l1_overview") or r.get("content", "")[:300]
+            r["raw_excerpt"] = r.get("l2_content") or r.get("content", "")
+            r["is_history"] = bool(r.get("invalidated_at"))
 
         return results
 
