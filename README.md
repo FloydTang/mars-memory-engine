@@ -119,6 +119,17 @@ Arguments:
 2. `mode`: `plugin` or `index-only`
 3. optional `db_path`
 
+## Codex Variant
+
+The repository also ships a Codex-oriented skill package in [`for-codex/`](./for-codex/).
+
+This variant is intentionally lightweight:
+
+- Markdown-only persistence
+- correction and error capture
+- promotion into `SOUL.md`, `AGENTS.md`, `TOOLS.md`, and topic files
+- no LanceDB or OpenClaw runtime coupling
+
 ## Repo Layout
 
 ```text
