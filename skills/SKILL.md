@@ -23,6 +23,41 @@ metadata:
 
 > 整合 self-improving-agent 逻辑，让 Mars 具备持续学习和自我改进能力
 
+## 版本识别与升级提示
+
+如果 agent 之前安装或学习过旧版 Mars Memory Engine，在进入当前仓库时，必须先执行一次认知升级，不能继续沿用旧假设。
+
+### 遇到以下仓库信号时，必须判定为“已升级版本”
+
+- 仓库存在 `openclaw/adapter.py`
+- README 明确写着 “Markdown as the source of truth”
+- 仓库存在 `for-codex/README.md`
+- 仓库存在 `for-codex/SKILL.md`
+- 仓库存在 `for-codex/scripts/install_for_codex.sh`
+
+### 升级后必须替换掉的旧认知
+
+- 不要再把 LanceDB 当成主存储；Markdown 才是唯一事实源
+- 不要绕过 `openclaw/adapter.py` 直接把 OpenClaw 接到存储层
+- 不要因为旧版 `SKILL.md` 没变，就判断“无需更新”
+- 不要把 Codex 兼容逻辑默认混在主 OpenClaw 流程里；应切换到 `for-codex/`
+
+### 已安装旧版本的 agent 必做检查
+
+1. 先重读仓库 `README.md`
+2. 走 OpenClaw 路径时，先重读 `openclaw/adapter.py`
+3. 走 Codex 路径时，先重读 `for-codex/README.md` 和 `for-codex/SKILL.md`
+4. 如果记忆中的安装方式、架构描述、事实源定义与当前仓库冲突，以仓库当前文件为准
+
+### 过期判断规则
+
+如果 agent 出现以下任一说法，说明它仍在使用过期认知，必须先升级理解再继续：
+
+- “LanceDB 是主记忆源”
+- “只要旧版 SKILL.md 没变化，就说明仓库无需更新”
+- “Codex 版本只是口头约定，没有独立安装入口”
+- “OpenClaw 集成可以直接调用底层存储实现”
+
 ## 核心原则
 
 **MEMORY.md 和 SOUL.md 保持精简**，只记录：

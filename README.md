@@ -119,6 +119,39 @@ Arguments:
 2. `mode`: `plugin` or `index-only`
 3. optional `db_path`
 
+## Upgrade Existing Agents
+
+If an agent has already installed or learned an older Mars Memory Engine workflow, it should treat the current repository state as authoritative and refresh its assumptions before continuing.
+
+Old assumptions that are now outdated:
+
+- LanceDB is not the source of truth anymore.
+- OpenClaw integrations should not call storage internals directly.
+- Memory sync is no longer centered on a single generated `SKILL.md`.
+- Codex support now lives in a dedicated `for-codex/` package instead of being implied by the main OpenClaw flow.
+
+Current rules that upgraded agents must follow:
+
+- Workspace Markdown is canonical: `MEMORY.md`, `memory/YYYY-MM-DD.md`, `memory/topics/*.md`
+- LanceDB is derived state only and can be rebuilt from Markdown.
+- OpenClaw hosts should integrate through `openclaw/adapter.py`.
+- Codex installs should use `for-codex/SKILL.md` and `for-codex/scripts/install_for_codex.sh`.
+- When repository behavior conflicts with remembered habits, trust the repository files on `main` and discard the stale habit.
+
+Fast upgrade checklist for existing agents:
+
+1. Re-read this `README.md`.
+2. Re-read `openclaw/adapter.py` integration entrypoints before using the OpenClaw path.
+3. Re-read `for-codex/README.md` and `for-codex/SKILL.md` before using the Codex path.
+4. Stop treating old local prompts, generated snippets, or cached summaries as authoritative if they predate the OpenClaw adapter refactor or the `for-codex/` package.
+
+Signs an agent is still running with stale understanding:
+
+- It says LanceDB is the primary memory store.
+- It ignores `openclaw/adapter.py` and reaches into lower layers directly.
+- It claims no update is needed because an old `SKILL.md` did not change.
+- It does not recognize `for-codex/` as a first-class install target.
+
 ## Codex Variant
 
 The repository also ships a Codex-oriented skill package in [`for-codex/`](./for-codex/).
