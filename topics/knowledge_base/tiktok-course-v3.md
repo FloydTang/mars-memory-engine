@@ -2,7 +2,7 @@
 
 > 类型: 知识分类
 > 标签: TikTok培训, 外贸营销, 课程体系
-> 关联: [[工具工作间/01_在整理的Skill/mars-memory-engine/README|mars-memory-engine]], [[02_MarsStudio/工具库/自用Skill/tiktok-landing-camp-背景|tiktok-landing-camp 背景]]
+> 关联: [[工具工作间/01_在整理的Skill/mars-memory-engine/README|mars-memory-engine]], HomeMac 服务库 `00_已归档/02_MarsStudio_历史资料/工具库/自用Skill/tiktok-landing-camp-背景.md`
 
 ## 8周课程体系
 
